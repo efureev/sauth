@@ -22,8 +22,8 @@ import (
 	goauth2 "gopkg.in/oauth2.v3/server"
 	"gopkg.in/oauth2.v3/store"
 
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/token"
 )
 
 func TestCustomProvider(t *testing.T) {

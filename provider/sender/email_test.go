@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/go-pkgz/auth/logger"
+	"github.com/efureev/sauth/logger"
 )
 
 func TestEmailSend(t *testing.T) {

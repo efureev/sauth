@@ -20,8 +20,8 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/pkg/errors"
 
-	"github.com/go-pkgz/auth/logger"
-	authtoken "github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	authtoken "github.com/efureev/sauth/token"
 )
 
 // TelegramHandler implements login via telegram

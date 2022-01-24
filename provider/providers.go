@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/dghubble/oauth1"
 	"github.com/dghubble/oauth1/twitter"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/token"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/facebook"
 	"golang.org/x/oauth2/github"

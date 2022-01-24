@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/token"
 )
 
 func TestUserUpdate(t *testing.T) {

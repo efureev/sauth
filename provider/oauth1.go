@@ -12,8 +12,8 @@ import (
 	"github.com/go-pkgz/rest"
 	"github.com/golang-jwt/jwt"
 
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/token"
 )
 
 // Oauth1Handler implements /login, /callback and /logout handlers for oauth1 flow

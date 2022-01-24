@@ -11,9 +11,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/provider"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/provider"
+	"github.com/efureev/sauth/token"
 )
 
 // Authenticator is top level auth object providing middlewares

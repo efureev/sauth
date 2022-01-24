@@ -11,9 +11,9 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/go-pkgz/auth/avatar"
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/avatar"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/token"
 )
 
 const defDevAuthPort = 8084

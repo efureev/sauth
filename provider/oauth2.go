@@ -13,8 +13,8 @@ import (
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/token"
 )
 
 // Oauth2Handler implements /login, /callback and /logout handlers from aouth2 flow

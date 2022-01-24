@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/token"
 )
 
 const (

@@ -10,11 +10,11 @@ import (
 	"github.com/go-pkgz/rest"
 	"github.com/pkg/errors"
 
-	"github.com/go-pkgz/auth/avatar"
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/middleware"
-	"github.com/go-pkgz/auth/provider"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/avatar"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/middleware"
+	"github.com/efureev/sauth/provider"
+	"github.com/efureev/sauth/token"
 )
 
 // Client is a type of auth client

@@ -20,8 +20,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/image/draw"
 
-	"github.com/go-pkgz/auth/logger"
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/logger"
+	"github.com/efureev/sauth/token"
 )
 
 // Proxy provides http handler for avatars from avatar.Store

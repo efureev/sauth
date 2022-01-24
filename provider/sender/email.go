@@ -13,7 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/go-pkgz/auth/logger"
+	"github.com/efureev/sauth/logger"
 )
 
 // Email implements sender interface for VerifyHandler

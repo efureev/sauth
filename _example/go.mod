@@ -1,4 +1,4 @@
-module github.com/go-pkgz/auth/_example
+module github.com/efureev/sauth/_example
 
 go 1.15
 

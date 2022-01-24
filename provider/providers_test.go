@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/go-pkgz/auth/token"
+	"github.com/efureev/sauth/token"
 )
 
 func TestProviders_NewGoogle(t *testing.T) {

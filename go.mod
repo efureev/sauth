@@ -1,11 +1,11 @@
-module github.com/go-pkgz/auth
+module github.com/efureev/sauth
 
 go 1.17
 
 require (
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/go-pkgz/repeater v1.1.3
-	github.com/go-pkgz/rest v1.12.0
+	github.com/go-pkgz/rest v1.12.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/nullrocks/identicon v0.0.0-20180626043057-7875f45b0022
