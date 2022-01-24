@@ -13,3 +13,5 @@
 .vscode
 *.cov
 Dockerfile
+
+.idea
