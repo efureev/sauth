@@ -1,5 +1,5 @@
 // Package auth provides "social login" with Github, Google, Facebook, Microsoft, Yandex and Battle.net as well as custom auth providers.
-package auth
+package sauth
 
 import (
 	"fmt"
