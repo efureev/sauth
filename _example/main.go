@@ -24,11 +24,11 @@ import (
 	goauth2 "gopkg.in/oauth2.v3/server"
 	"gopkg.in/oauth2.v3/store"
 
+	"github.com/efureev/sauth"
 	"github.com/efureev/sauth/avatar"
 	"github.com/efureev/sauth/middleware"
 	"github.com/efureev/sauth/provider"
 	"github.com/efureev/sauth/token"
-	"github.com/go-pkgz/auth"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	log.Setup(log.Debug, log.Msec, log.LevelBraces, log.CallerFile, log.CallerFunc) // setup default logger with go-pkgz/lgr
 
 	// define auth options
-	options := auth.Opts{
+	options := sauth.Opts{
 		SecretReader: token.SecretFunc(func(_ string) (string, error) { // secret key for JWT, ignores aud
 			return "secret", nil
 		}),
@@ -48,7 +48,7 @@ func main() {
 		AvatarStore:       avatar.NewLocalFS("/tmp/demo-auth-service"), // stores avatars locally
 		AvatarResizeLimit: 200,                                         // resizes avatars to 200x200
 		ClaimsUpd: token.ClaimsUpdFunc(func(claims token.Claims) token.Claims { // modify issued token
-			if claims.User != nil && claims.User.Name == "dev_admin" {          // set attributes for dev_admin
+			if claims.User != nil && claims.User.Name == "dev_admin" { // set attributes for dev_admin
 				claims.User.SetAdmin(true)
 				claims.User.SetStrAttr("custom-key", "some value")
 			}
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	// create auth service
-	service := auth.NewService(options)
+	service := sauth.NewService(options)
 	service.AddProvider("dev", "", "")                                                             // add dev provider
 	service.AddProvider("github", os.Getenv("AEXMPL_GITHUB_CID"), os.Getenv("AEXMPL_GITHUB_CSEC")) // add github provider
 	service.AddProvider("twitter", os.Getenv("AEXMPL_TWITTER_APIKEY"), os.Getenv("AEXMPL_TWITTER_APISEC"))

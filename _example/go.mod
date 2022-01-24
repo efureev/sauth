@@ -2,11 +2,11 @@ module github.com/efureev/sauth/_example
 
 go 1.15
 
-replace github.com/go-pkgz/auth => ../
+replace github.com/efureev/sauth => ../
 
 require (
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/go-pkgz/auth v1.18.0
+	github.com/efureev/sauth v1.18.0
 	github.com/go-pkgz/lgr v0.10.4
 	github.com/go-pkgz/rest v1.12.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
