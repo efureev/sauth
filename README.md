@@ -319,34 +319,47 @@ This provider brings two extra functions:
       and `bitbucket_prod`)
     * `Client` - ID and secret of client
     * `Endpoint` - auth URL and token URL. This information could be obtained from auth2 provider page
-    * `InfoURL` - oauth2 provider API method to read information of logged in user. This method could be found in
-      documentation of oauth2 provider (e.g. for
-      bitbucket https://developer.atlassian.com/bitbucket/api/2/reference/resource/user)
-    * `MapUserFn` - function to convert the response from `InfoURL` to `token.User` (s. example below)
+    * `InfoUrlMappers` - list of mappers: transfer an info-url to an info-data.
+      * `InfoURL` - oauth2 provider API method to read information of logged-in user. This method could be found in
+        documentation of oauth2 provider (e.g. for
+        bitbucket https://developer.atlassian.com/bitbucket/api/2/reference/resource/user)
+      * `MapUserFn` - function to convert the response from `InfoURL` to `token.UserData` (s. example below)
     * `Scopes` - minimal needed scope to read user information. Client should be authorized to these scopes
-   ```go
+    ```go
    c := sauth.Client{
        Cid:     os.Getenv("AEXMPL_BITBUCKET_CID"),
        Csecret: os.Getenv("AEXMPL_BITBUCKET_CSEC"),
    }
 
    service.AddCustomProvider("bitbucket", c, provider.CustomHandlerOpt{
-       Endpoint: oauth2.Endpoint{
-           AuthURL:  "https://bitbucket.org/site/oauth2/authorize",
-           TokenURL: "https://bitbucket.org/site/oauth2/access_token",
-       },
-       InfoURL: "https://api.bitbucket.org/2.0/user/",
-       MapUserFn: func(data provider.UserData, _ []byte) token.User {
-           userInfo := token.User{
-               ID: "bitbucket_" + token.HashID(sha1.New(),
-                   data.Value("username")),
-               Name: data.Value("nickname"),
-           }
-           return userInfo
-       },
-       Scopes: []string{"account"},
-   })
-   ```
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://bitbucket.org/site/oauth2/authorize",
+			TokenURL: "https://bitbucket.org/site/oauth2/access_token",
+		},
+		InfoUrlMappers: []provider.Oauth2Mapper{
+			provider.NewOauth2Mapper(
+				"https://api.bitbucket.org/2.0/user/",
+				func(ctx context.Context, ud *token.UserData, raw interface{}, _ []byte) token.User {
+					d, ok := raw.(map[string]interface{})
+					if !ok {
+						panic(`not UserData`)
+					}
+
+					userData := provider.UserRawData(d)
+					userInfo := token.User{
+						ID: "bitbucket_" + token.HashID(sha1.New(),
+							userData.Value("username")),
+						Name: userData.Value("nickname"),
+					}
+
+					return userInfo
+				},
+				provider.UserRawData{},
+			),
+		},
+		Scopes: []string{"account"},
+	})
+    ```
 2. Adds local oauth2 server user can fully customize. It
    uses [`gopkg.in/oauth2.v3`](https://github.com/go-oauth2/oauth2) library and example shows
    how [to initialize](https://github.com/efureev/sauth/blob/master/_example/main.go#L227) the server
