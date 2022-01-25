@@ -23,6 +23,12 @@ type Client struct {
 	Csecret string
 }
 
+type ProviderConfig struct {
+	Client
+	Enabled bool
+	Name    string
+}
+
 // Service provides higher level wrapper allowing to construct everything and get back token middleware
 type Service struct {
 	logger         logger.L
@@ -220,19 +226,30 @@ func (s *Service) Middleware() middleware.Authenticator {
 }
 
 // AddProvider adds provider for given name
-func (s *Service) AddProvider(name, cid, csecret string) {
+//func (s *Service) AddProvider(name, cid, csecret string) {
+func (s *Service) AddProvider(pConf ProviderConfig) {
+	s.AddProviderWithParams(pConf, s.DefaultParams(pConf))
+}
 
-	p := provider.Params{
+func (s *Service) DefaultParams(pConf ProviderConfig) provider.Params {
+	return provider.Params{
 		URL:         s.opts.URL,
 		JwtService:  s.jwtService,
 		Issuer:      s.issuer,
 		AvatarSaver: s.avatarProxy,
-		Cid:         cid,
-		Csecret:     csecret,
+		Cid:         pConf.Cid,
+		Csecret:     pConf.Csecret,
 		L:           s.logger,
 	}
+}
 
-	switch strings.ToLower(name) {
+func (s *Service) AddProviderWithParams(pConf ProviderConfig, p provider.Params) {
+
+	if !pConf.Enabled {
+		return
+	}
+
+	switch strings.ToLower(pConf.Name) {
 	case "github":
 		s.providers = append(s.providers, provider.NewService(provider.NewGithub(p)))
 	case "google":
@@ -394,4 +411,15 @@ func (s *Service) TokenService() *token.Service {
 // AvatarProxy returns stored in service
 func (s *Service) AvatarProxy() *avatar.Proxy {
 	return s.avatarProxy
+}
+
+func NewProviderConfig(name, sid, secret string, enabled bool) ProviderConfig {
+	c := ProviderConfig{
+		Name:    name,
+		Enabled: enabled,
+	}
+	c.Cid = sid
+	c.Csecret = secret
+
+	return c
 }

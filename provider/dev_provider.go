@@ -173,16 +173,28 @@ func NewDev(p Params) Oauth2Handler {
 			AuthURL:  fmt.Sprintf("http://127.0.0.1:%d/login/oauth/authorize", p.Port),
 			TokenURL: fmt.Sprintf("http://127.0.0.1:%d/login/oauth/access_token", p.Port),
 		},
-		scopes:  []string{"user:email"},
-		infoURL: fmt.Sprintf("http://127.0.0.1:%d/user", p.Port),
-		mapUser: func(data UserData, _ []byte) token.User {
-			userInfo := token.User{
-				ID:      data.Value("id"),
-				Name:    data.Value("name"),
-				Picture: data.Value("picture"),
-				Email:   data.Value("email"),
-			}
-			return userInfo
+		scopes: []string{"user:email"},
+		infoUrlMappers: []Oauth2Mapper{
+			NewOauth2Mapper(
+				fmt.Sprintf("http://127.0.0.1:%d/user", p.Port),
+				func(ctx context.Context, ud *token.UserData, raw interface{}, _ []byte) token.User {
+					d, ok := raw.(map[string]interface{})
+					if !ok {
+						panic(`not UserData`)
+					}
+					userRawData := UserRawData(d)
+
+					userInfo := token.User{
+						ID:      userRawData.Value("id"),
+						Name:    userRawData.Value("name"),
+						Picture: userRawData.Value("picture"),
+						Email:   userRawData.Value("email"),
+					}
+
+					return userInfo
+				},
+				UserRawData{},
+			),
 		},
 	})
 

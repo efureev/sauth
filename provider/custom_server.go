@@ -22,10 +22,11 @@ import (
 
 // CustomHandlerOpt are options to initialize a handler for oauth2 server
 type CustomHandlerOpt struct {
-	Endpoint  oauth2.Endpoint
-	InfoURL   string
-	MapUserFn func(UserData, []byte) token.User
-	Scopes    []string
+	Endpoint oauth2.Endpoint
+	//InfoURL   string
+	//MapUserFn func(UserRawData, []byte) token.User
+	Scopes         []string
+	InfoUrlMappers []Oauth2Mapper
 }
 
 // CustomServerOpt are options to initialize a custom go-oauth2/oauth2 server
@@ -44,8 +45,9 @@ func NewCustomServer(srv *goauth2.Server, sopts CustomServerOpt) *CustomServer {
 			AuthURL:  sopts.URL + "/authorize",
 			TokenURL: sopts.URL + "/access_token",
 		},
-		InfoURL:   sopts.URL + "/user",
-		MapUserFn: defaultMapUserFn,
+		InfoUrlMappers: []Oauth2Mapper{
+			NewOauth2Mapper(sopts.URL+"/user", defaultMapUserFn, UserRawData{}),
+		},
 	}
 
 	return &CustomServer{
@@ -204,20 +206,25 @@ func (c *CustomServer) Shutdown() {
 // NewCustom creates a handler for go-oauth2/oauth2 server
 func NewCustom(name string, p Params, copts CustomHandlerOpt) Oauth2Handler {
 	return initOauth2Handler(p, Oauth2Handler{
-		name:     name,
-		endpoint: copts.Endpoint,
-		scopes:   copts.Scopes,
-		infoURL:  copts.InfoURL,
-		mapUser:  copts.MapUserFn,
+		name:           name,
+		endpoint:       copts.Endpoint,
+		scopes:         copts.Scopes,
+		infoUrlMappers: copts.InfoUrlMappers,
 	})
 }
 
-func defaultMapUserFn(data UserData, _ []byte) token.User {
-	userInfo := token.User{
-		ID:      data.Value("id"),
-		Name:    data.Value("name"),
-		Picture: data.Value("picture"),
+func defaultMapUserFn(ctx context.Context, ud *token.UserData, raw interface{}, _ []byte) token.User {
+	d, ok := raw.(map[string]interface{})
+	if !ok {
+		panic(`not UserData`)
 	}
+	userRawData := UserRawData(d)
+	userInfo := token.User{
+		ID:      userRawData.Value("id"),
+		Name:    userRawData.Value("name"),
+		Picture: userRawData.Value("picture"),
+	}
+
 	return userInfo
 }
 

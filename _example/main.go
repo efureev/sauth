@@ -150,10 +150,10 @@ func main() {
 
 	// Start server
 	go prov.Run(context.Background())
-	service.AddCustomProvider("custom123", auth.Client{Cid: "cid", Csecret: "csecret"}, prov.HandlerOpt)
+	service.AddCustomProvider("custom123", sauth.Client{Cid: "cid", Csecret: "csecret"}, prov.HandlerOpt)
 
 	// Example: add different oauth2 provider
-	c := auth.Client{
+	c := sauth.Client{
 		Cid:     os.Getenv("AEXMPL_BITBUCKET_CID"),
 		Csecret: os.Getenv("AEXMPL_BITBUCKET_CSEC"),
 	}

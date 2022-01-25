@@ -2,9 +2,7 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -22,32 +20,34 @@ type Oauth2Handler struct {
 	Params
 
 	// all of these fields specific to particular oauth2 provider
-	name     string
-	infoURL  string
-	endpoint oauth2.Endpoint
-	scopes   []string
-	mapUser  func(UserData, []byte) token.User // map info from InfoURL to User
-	conf     oauth2.Config
+	name string
+	//infoURL        string
+	endpoint       oauth2.Endpoint
+	scopes         []string
+	infoUrlMappers []Oauth2Mapper
+	//mapUser        func(UserRawData, []byte) token.User // map info from InfoURL to User
+	conf oauth2.Config
 }
 
 // Params to make initialized and ready to use provider
 type Params struct {
 	logger.L
-	URL         string
-	JwtService  TokenService
-	Cid         string
-	Csecret     string
-	Issuer      string
-	AvatarSaver AvatarSaver
+	URL          string
+	JwtService   TokenService
+	Cid          string
+	Csecret      string
+	Issuer       string
+	AvatarSaver  AvatarSaver
+	AfterReceive func(u *token.UserData) error
 
 	Port int // relevant for providers supporting port customization, for example dev oauth2
 }
 
 // UserData is type for user information returned from oauth2 providers /info API method
-type UserData map[string]interface{}
+type UserRawData map[string]interface{}
 
 // Value returns value for key or empty string if not found
-func (u UserData) Value(key string) string {
+func (u UserRawData) Value(key string) string {
 	// json.Unmarshal converts json "null" value to go's "nil", in this case return empty string
 	if val, ok := u[key]; ok && val != nil {
 		return fmt.Sprintf("%v", val)
@@ -160,39 +160,43 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := p.conf.Client(context.Background(), tok)
-	uinfo, err := client.Get(p.infoURL)
-	if err != nil {
-		rest.SendErrorJSON(w, r, p.L, http.StatusServiceUnavailable, err, "failed to get client info")
-		return
-	}
 
-	defer func() {
-		if e := uinfo.Body.Close(); e != nil {
-			p.Logf("[WARN] failed to close response body, %s", e)
+	mapper := newMappers(client, p.Logf)
+	err = mapper.adds(p.infoUrlMappers...).get()
+	if err != nil {
+		if e, ok := err.(CodeError); ok {
+			rest.SendErrorJSON(w, r, p.L, e.code, e.err, e.message)
+			return
 		}
-	}()
+		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "mappers failed")
+		return
+	}
 
-	data, err := io.ReadAll(uinfo.Body)
+	uData, err := token.GetUserDataFromCtx(mapper.ctx)
 	if err != nil {
-		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to read user info")
+		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "context is empty")
 		return
 	}
+	uData.Social = p.Name()
 
-	jData := map[string]interface{}{}
-	if e := json.Unmarshal(data, &jData); e != nil {
-		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to unmarshal user info")
-		return
-	}
-	p.Logf("[DEBUG] got raw user info %+v", jData)
-
-	u := p.mapUser(jData, data)
 	if oauthClaims.NoAva {
-		u.Picture = "" // reset picture on no avatar request
+		uData.User.Picture = "" // reset picture on no avatar request
 	}
-	u, err = setAvatar(p.AvatarSaver, u, client)
+	uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
 	if err != nil {
 		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
 		return
+	}
+
+	if p.AfterReceive != nil {
+		if err := p.AfterReceive(&uData); err != nil {
+			if e, ok := err.(CodeError); ok {
+				rest.SendErrorJSON(w, r, p.L, e.code, e.err, e.message)
+				return
+			}
+			rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, err.Error())
+			return
+		}
 	}
 
 	cid, err := randToken()
@@ -201,7 +205,7 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	claims := token.Claims{
-		User: &u,
+		User: &uData.User,
 		StandardClaims: jwt.StandardClaims{
 			Issuer:   p.Issuer,
 			Id:       cid,
@@ -216,14 +220,14 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.Logf("[DEBUG] user info %+v", u)
+	p.Logf("[DEBUG] user info %+v", uData.User)
 
 	// redirect to back url if presented in login query params
 	if oauthClaims.Handshake != nil && oauthClaims.Handshake.From != "" {
 		http.Redirect(w, r, oauthClaims.Handshake.From, http.StatusTemporaryRedirect)
 		return
 	}
-	rest.RenderJSON(w, &u)
+	rest.RenderJSON(w, &uData.User)
 }
 
 // LogoutHandler - GET /logout

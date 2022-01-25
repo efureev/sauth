@@ -22,7 +22,7 @@ type Oauth1Handler struct {
 	name    string
 	infoURL string
 	conf    oauth1.Config
-	mapUser func(UserData, []byte) token.User // map info from InfoURL to User
+	mapUser func(UserRawData, []byte) token.User // map info from InfoURL to User
 }
 
 // Name returns provider name
