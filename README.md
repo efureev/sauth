@@ -1,6 +1,8 @@
 # sauth - authentication via oauth2, direct and email
 
-[![Build Status](https://github.com/efureev/sauth/workflows/build/badge.svg)](https://github.com/efureev/sauth/actions) [![Coverage Status](https://coveralls.io/repos/github/efureev/sauth/badge.svg?branch=master)](https://coveralls.io/github/go-pkgz/auth?branch=master) [![godoc](https://godoc.org/github.com/go-pkgz/auth?status.svg)](https://pkg.go.dev/github.com/go-pkgz/auth?tab=doc)
+[![Build Status](https://github.com/efureev/sauth/workflows/build/badge.svg)](https://github.com/efureev/sauth/actions)
+[![Coverage Status](https://coveralls.io/repos/github/efureev/sauth/badge.svg?branch=master)](https://coveralls.io/github/efureev/sauth?branch=master)
+[![godoc](https://godoc.org/github.com/efureev/sauth?status.svg)](https://pkg.go.dev/github.com/efureev/sauth?tab=doc)
 
 This library provides "social login" with Github, Google, Facebook, Microsoft, Twitter, Yandex, Battle.net, Apple,
 Patreon and Telegram as well as custom auth providers and email verification.
@@ -61,7 +63,7 @@ func main() {
 
     for _, provConfig := range providers {
         p := service.DefaultParams(provConfig)
-		p.AfterReceive = func(u *token.UserData) (err error) {
+        p.AfterReceive = func(u *token.UserData) (err error) {
             println(u.Social, `:`, u.User.ID)
             return
         }
