@@ -31,6 +31,14 @@ import (
 	"github.com/efureev/sauth/token"
 )
 
+var providers = []sauth.ProviderConfig{
+	sauth.NewProviderConfig("github", os.Getenv("AEXMPL_GITHUB_CID"), os.Getenv("AEXMPL_GITHUB_CSEC"), true),
+	sauth.NewProviderConfig("microsoft", os.Getenv("AEXMPL_MS_APIKEY"), os.Getenv("AEXMPL_MS_APISEC"), true),
+	sauth.NewProviderConfig("twitter", os.Getenv("AEXMPL_TWITTER_APIKEY"), os.Getenv("AEXMPL_TWITTER_APISEC"), false),
+}
+
+var devServerEnabled = true
+
 func main() {
 
 	log.Setup(log.Debug, log.Msec, log.LevelBraces, log.CallerFile, log.CallerFunc) // setup default logger with go-pkgz/lgr
@@ -78,11 +86,27 @@ func main() {
 
 	// create auth service
 	service := sauth.NewService(options)
-	service.AddProvider("dev", "", "")                                                             // add dev provider
-	service.AddProvider("github", os.Getenv("AEXMPL_GITHUB_CID"), os.Getenv("AEXMPL_GITHUB_CSEC")) // add github provider
-	service.AddProvider("twitter", os.Getenv("AEXMPL_TWITTER_APIKEY"), os.Getenv("AEXMPL_TWITTER_APISEC"))
-	service.AddProvider("microsoft", os.Getenv("AEXMPL_MS_APIKEY"), os.Getenv("AEXMPL_MS_APISEC"))
-	service.AddProvider("patreon", os.Getenv("AEXMPL_PATREON_CID"), os.Getenv("AEXMPL_PATREON_CSEC"))
+
+	for _, provConfig := range providers {
+		p := service.DefaultParams(provConfig)
+		p.AfterReceive = func(u *token.UserData) (err error) {
+			println(u.Social, `:`, u.User.ID)
+			return
+		}
+
+		service.AddProviderWithParams(provConfig, p)
+	}
+
+	if devServerEnabled {
+		service.AddDevProvider(8084)
+		go func() {
+			devAuthServer, err := service.DevAuth() // peak dev oauth2 server
+			if err != nil {
+				log.Printf("[PANIC] failed to start dev oauth2 server, %v", err)
+			}
+			devAuthServer.Run(context.Background())
+		}()
+	}
 
 	// allow sign with apple id
 	appleCfg := provider.AppleConfig{
@@ -129,15 +153,6 @@ func main() {
 		service.AddCustomHandler(&telegram)
 	}
 
-	// run dev/test oauth2 server on :8084
-	go func() {
-		devAuthServer, err := service.DevAuth() // peak dev oauth2 server
-		if err != nil {
-			log.Printf("[PANIC] failed to start dev oauth2 server, %v", err)
-		}
-		devAuthServer.Run(context.Background())
-	}()
-
 	// Example: start custom oauth2 server, add to handlers
 	srv := initGoauth2Srv()
 	sopts := provider.CustomServerOpt{
@@ -163,14 +178,26 @@ func main() {
 			AuthURL:  "https://bitbucket.org/site/oauth2/authorize",
 			TokenURL: "https://bitbucket.org/site/oauth2/access_token",
 		},
-		InfoURL: "https://api.bitbucket.org/2.0/user/",
-		MapUserFn: func(data provider.UserData, _ []byte) token.User {
-			userInfo := token.User{
-				ID: "bitbucket_" + token.HashID(sha1.New(),
-					data.Value("username")),
-				Name: data.Value("nickname"),
-			}
-			return userInfo
+		InfoUrlMappers: []provider.Oauth2Mapper{
+			provider.NewOauth2Mapper(
+				"https://api.bitbucket.org/2.0/user/",
+				func(ctx context.Context, ud *token.UserData, raw interface{}, _ []byte) token.User {
+					d, ok := raw.(map[string]interface{})
+					if !ok {
+						panic(`not UserData`)
+					}
+
+					userData := provider.UserRawData(d)
+					userInfo := token.User{
+						ID: "bitbucket_" + token.HashID(sha1.New(),
+							userData.Value("username")),
+						Name: userData.Value("nickname"),
+					}
+
+					return userInfo
+				},
+				provider.UserRawData{},
+			),
 		},
 		Scopes: []string{"account"},
 	})

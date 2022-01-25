@@ -53,8 +53,23 @@ func main() {
 
 	// create auth service with providers
 	service := sauth.NewService(options)
-	service.AddProvider("github", "<Client ID>", "<Client Secret>")   // add github provider
-	service.AddProvider("facebook", "<Client ID>", "<Client Secret>") // add facebook provider
+    var providers = []sauth.ProviderConfig{
+        sauth.NewProviderConfig("github", os.Getenv("AEXMPL_GITHUB_CID"), os.Getenv("AEXMPL_GITHUB_CSEC"), true),
+        sauth.NewProviderConfig("microsoft", os.Getenv("AEXMPL_MS_APIKEY"), os.Getenv("AEXMPL_MS_APISEC"), true),
+        sauth.NewProviderConfig("twitter", os.Getenv("AEXMPL_TWITTER_APIKEY"), os.Getenv("AEXMPL_TWITTER_APISEC"), false),
+    }
+
+    for _, provConfig := range providers {
+        p := service.DefaultParams(provConfig)
+		p.AfterReceive = func(u *token.UserData) (err error) {
+            println(u.Social, `:`, u.User.ID)
+            return
+		}
+        
+        service.AddProviderWithParams(provConfig, p)
+    }
+	
+	// see more in example
 
 	// retrieve auth middleware
 	m := service.Middleware()
