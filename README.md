@@ -64,7 +64,7 @@ func main() {
 		p.AfterReceive = func(u *token.UserData) (err error) {
             println(u.Social, `:`, u.User.ID)
             return
-		}
+        }
         
         service.AddProviderWithParams(provConfig, p)
     }
