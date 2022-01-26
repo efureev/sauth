@@ -3,7 +3,6 @@ package provider
 
 import (
 	"context"
-	"crypto/sha1" //nolint
 
 	"github.com/efureev/sauth/token"
 	"golang.org/x/oauth2/google"
@@ -14,8 +13,12 @@ func NewGoogle(p Params) Oauth2Handler {
 	return initOauth2Handler(p, Oauth2Handler{
 		name:     "google",
 		endpoint: google.Endpoint,
-		scopes:   []string{"https://www.googleapis.com/auth/userinfo.profile"},
-		// See https://tech.yandex.com/passport/doc/dg/reference/response-docpage/
+		//scopes:   []string{"email", "profile"},
+		scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.profile",
+			"https://www.googleapis.com/auth/userinfo.email",
+		},
+		//See https://tech.yandex.com/passport/doc/dg/reference/response-docpage/
 		infoUrlMappers: []Oauth2Mapper{
 			NewOauth2Mapper(
 				"https://www.googleapis.com/oauth2/v3/userinfo",
@@ -27,14 +30,14 @@ func NewGoogle(p Params) Oauth2Handler {
 					userRawData := UserRawData(d)
 
 					userInfo := token.User{
-						// encode email with provider name to avoid collision if same id returned by other provider
-						ID:      "google_" + token.HashID(sha1.New(), userRawData.Value("sub")),
+						ID:      userRawData.Value("sub"),
 						Name:    userRawData.Value("name"),
 						Picture: userRawData.Value("picture"),
+						Email:   userRawData.Value("email"),
 					}
 
 					if userInfo.Name == "" {
-						userInfo.Name = "noname_" + userInfo.ID[8:12]
+						userInfo.Name = "noname_" + userInfo.ID
 					}
 
 					return userInfo

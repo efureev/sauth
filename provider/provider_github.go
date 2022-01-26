@@ -3,7 +3,7 @@ package provider
 
 import (
 	"context"
-	"crypto/sha1" //nolint
+	"strconv"
 
 	"github.com/efureev/sauth/token"
 	"github.com/mitchellh/mapstructure"
@@ -34,8 +34,18 @@ func NewGithub(p Params) Oauth2Handler {
 					}
 
 					userData := UserRawData(d)
+					var idStr string
+
+					if val, ok := userData[`id`]; ok && val != nil {
+						idStr = strconv.FormatFloat(val.(float64), 'f', -1, 64)
+					}
+
+					if idStr == `` {
+						panic(`runtime error: invalid ID`)
+					}
+
 					userInfo := token.User{
-						ID:      "github_" + token.HashID(sha1.New(), userData.Value("login")),
+						ID:      idStr,
 						Name:    userData.Value("name"),
 						Picture: userData.Value("avatar_url"),
 					}

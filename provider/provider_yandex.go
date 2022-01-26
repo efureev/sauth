@@ -3,9 +3,9 @@ package provider
 
 import (
 	"context"
-	"crypto/sha1" //nolint
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/efureev/sauth/token"
 	"golang.org/x/oauth2/yandex"
 )
@@ -26,7 +26,8 @@ func NewYandex(p Params) Oauth2Handler {
 						panic(`not UserData`)
 					}
 					userRawData := UserRawData(d)
-					ud.User.ID = "yandex_" + token.HashID(sha1.New(), userRawData.Value("id"))
+					spew.Dump(userRawData)
+					ud.User.ID = userRawData.Value("id")
 					ud.User.Email = userRawData.Value("default_email")
 
 					ud.User.Name = userRawData.Value("display_name") // using Display Name by default
