@@ -58,8 +58,8 @@ func (ud *UserData) AddCollection(collection Collection) {
 }
 
 func (ud *UserData) GetCollection(name string) *Collection {
-	if _, ok := ud.Collections[name]; !ok {
-		return ud.Collections[name]
+	if v, ok := ud.Collections[name]; ok {
+		return v
 	}
 	return nil
 }
