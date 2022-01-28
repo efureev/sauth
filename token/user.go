@@ -1,7 +1,6 @@
 package token
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"hash"
@@ -9,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-
-	"github.com/pkg/errors"
 )
 
 var reValidSha = regexp.MustCompile("^[a-fA-F0-9]{40}$")
@@ -157,58 +154,4 @@ func (u *User) SetRole(role string) {
 // GetRole gets user role
 func (u *User) GetRole() string {
 	return u.Role
-}
-
-type UserData struct {
-	User            User                   `json:"user"`
-	Social          string                 `json:"social"`
-	AvailableEmails map[string]bool        `json:"available_emails"`
-	Raw             map[string]interface{} `json:"raw"`
-}
-
-func (ud *UserData) SetRaw(key string, val interface{}) {
-	if ud.Raw == nil {
-		ud.Raw = map[string]interface{}{}
-	}
-	ud.Raw[key] = val
-}
-
-func (ud *UserData) SetEmailToAvailable(email string, primary bool) {
-	if ud.AvailableEmails == nil {
-		ud.AvailableEmails = map[string]bool{}
-	}
-
-	if _, ok := ud.AvailableEmails[email]; !ok {
-		ud.AvailableEmails[email] = primary
-	}
-}
-
-func GetUserDataFromCtx(ctx context.Context) (user UserData, err error) {
-	if ctx == nil {
-		return UserData{User: User{}}, errors.New("no info about user")
-	}
-	if u, ok := ctx.Value(contextKey("userData")).(UserData); ok {
-		return u, nil
-	}
-
-	return UserData{User: User{}}, errors.New("user can't be parsed")
-}
-
-func SetUserDataToCtx(ctx context.Context, user UserData) context.Context {
-	return context.WithValue(ctx, contextKey("userData"), user)
-}
-
-func GetUserFromCtx(ctx context.Context) (user User, err error) {
-	if ctx == nil {
-		return User{}, errors.New("no info about user")
-	}
-	if u, ok := ctx.Value(contextKey("user")).(User); ok {
-		return u, nil
-	}
-
-	return User{}, errors.New("user can't be parsed")
-}
-
-func SetUserToCtx(ctx context.Context, user User) context.Context {
-	return context.WithValue(ctx, contextKey("user"), user)
 }

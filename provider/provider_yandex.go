@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/efureev/sauth/token"
 	"golang.org/x/oauth2/yandex"
 )
@@ -26,7 +25,7 @@ func NewYandex(p Params) Oauth2Handler {
 						panic(`not UserData`)
 					}
 					userRawData := UserRawData(d)
-					spew.Dump(userRawData)
+
 					ud.User.ID = userRawData.Value("id")
 					ud.User.Email = userRawData.Value("default_email")
 
@@ -45,8 +44,9 @@ func NewYandex(p Params) Oauth2Handler {
 
 					if valEmails, ok := userRawData[`emails`]; ok && valEmails != nil {
 						if emails, ok := valEmails.([]string); ok {
+							collection := ud.CreateEmailCollection()
 							for _, email := range emails {
-								ud.SetEmailToAvailable(email, ud.User.Email == email)
+								collection.Add(email, ud.User.Email == email)
 							}
 						}
 					}

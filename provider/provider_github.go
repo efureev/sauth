@@ -66,6 +66,8 @@ func NewGithub(p Params) Oauth2Handler {
 						return ud.User
 					}
 
+					collection := ud.CreateEmailCollection()
+
 					for _, email := range dataEmails {
 						var ge = GitHubEmail{}
 
@@ -73,13 +75,13 @@ func NewGithub(p Params) Oauth2Handler {
 							continue
 						}
 
-						ud.SetEmailToAvailable(ge.Email, ge.Primary)
+						collection.Add(ge.Email, ge.Primary)
 
 						if ge.Primary && ud.User.Email == `` {
 							ud.User.Email = ge.Email
 						}
-					}
 
+					}
 					return ud.User
 				},
 				GitHubEmails{},

@@ -8,6 +8,7 @@ require (
 	github.com/go-pkgz/rest v1.12.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/microcosm-cc/bluemonday v1.0.16
+	github.com/mitchellh/mapstructure v1.4.3
 	github.com/nullrocks/identicon v0.0.0-20180626043057-7875f45b0022
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
@@ -28,7 +29,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
 	github.com/tidwall/buntdb v1.1.0 // indirect

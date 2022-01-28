@@ -87,7 +87,7 @@ func (m Oauth2Mapper) get(ctx context.Context, client *http.Client, l func(forma
 
 	user := m.mapFn(ctx, &ud, m.result, data)
 	ud.User = user
-	ud.SetEmailToAvailable(ud.User.Email, true)
+	ud.CreateEmailCollection().Add(ud.User.Email, true)
 
 	return token.SetUserDataToCtx(ctx, ud), nil
 }
