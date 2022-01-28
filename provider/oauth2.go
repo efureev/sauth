@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 
+	"github.com/efureev/sauth/avatar"
 	"github.com/efureev/sauth/logger"
 	"github.com/efureev/sauth/token"
 )
@@ -182,10 +183,13 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	if oauthClaims.NoAva {
 		uData.User.Picture = "" // reset picture on no avatar request
 	}
-	uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
-	if err != nil {
-		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
-		return
+
+	if p.AvatarSaver.(*avatar.Proxy) != nil {
+		uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
+		if err != nil {
+			rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
+			return
+		}
 	}
 
 	if p.AfterReceive != nil {
