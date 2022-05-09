@@ -70,7 +70,7 @@ func NewBattlenet(p Params) Oauth2Handler {
 func NewMicrosoft(p Params) Oauth2Handler {
 	return initOauth2Handler(p, Oauth2Handler{
 		name:     "microsoft",
-		endpoint: microsoft.AzureADEndpoint("consumers"),
+		endpoint: microsoft.AzureADEndpoint("common"),
 		scopes:   []string{"User.Read"},
 		infoUrlMappers: []Oauth2Mapper{
 			NewOauth2Mapper(
