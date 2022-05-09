@@ -112,7 +112,7 @@ func (gf *GridFS) Remove(avatar string) error {
 		}
 		return bucket.Delete(r.ID)
 	}
-	return errors.Errorf("avatar %s not found", avatar)
+	return fmt.Errorf("avatar %s not found", avatar)
 }
 
 // List all avatars (ids) on gfs

@@ -2,8 +2,7 @@ package token
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 type Collections map[string]*Collection
@@ -70,13 +69,13 @@ func NewCollection(name string) *Collection {
 
 func GetUserDataFromCtx(ctx context.Context) (user UserData, err error) {
 	if ctx == nil {
-		return UserData{User: User{}}, errors.New("no info about user")
+		return UserData{User: User{}}, fmt.Errorf("no info about user")
 	}
 	if u, ok := ctx.Value(contextKey("userData")).(UserData); ok {
 		return u, nil
 	}
 
-	return UserData{User: User{}}, errors.New("user can't be parsed")
+	return UserData{User: User{}}, fmt.Errorf("user can't be parsed")
 }
 
 func SetUserDataToCtx(ctx context.Context, user UserData) context.Context {
@@ -85,13 +84,13 @@ func SetUserDataToCtx(ctx context.Context, user UserData) context.Context {
 
 func GetUserFromCtx(ctx context.Context) (user User, err error) {
 	if ctx == nil {
-		return User{}, errors.New("no info about user")
+		return User{}, fmt.Errorf("no info about user")
 	}
 	if u, ok := ctx.Value(contextKey("user")).(User); ok {
 		return u, nil
 	}
 
-	return User{}, errors.New("user can't be parsed")
+	return User{}, fmt.Errorf("user can't be parsed")
 }
 
 func SetUserToCtx(ctx context.Context, user User) context.Context {

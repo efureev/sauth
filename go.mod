@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/dghubble/oauth1 v0.7.1
+	github.com/go-oauth2/oauth2/v4 v4.5.0
 	github.com/go-pkgz/repeater v1.1.3
 	github.com/go-pkgz/rest v1.14.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -13,19 +14,15 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.1
 	go.etcd.io/bbolt v1.3.6
-	go.mongodb.org/mongo-driver v1.9.1
+	go.mongodb.org/mongo-driver v1.8.5
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
-	gopkg.in/oauth2.v3 v3.12.0
 )
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/go-oauth2/oauth2/v4 v4.5.0 // indirect
-	github.com/go-session/session v3.1.2+incompatible // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -40,7 +37,6 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/rtred v0.1.2 // indirect
-	github.com/tidwall/rtree v1.5.0 // indirect
 	github.com/tidwall/tinyqueue v0.1.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect

@@ -66,7 +66,7 @@ func (b *BoltDB) Get(avatarID string) (reader io.ReadCloser, size int, err error
 	err = b.db.View(func(tx *bolt.Tx) error {
 		data := tx.Bucket([]byte(avatarsBktName)).Get([]byte(avatarID))
 		if data == nil {
-			return errors.Errorf("can't load avatar %s", avatarID)
+			return fmt.Errorf("can't load avatar %s", avatarID)
 		}
 		size, err = buf.Write(data)
 		return errors.Wrapf(err, "failed to write for %s", avatarID)
@@ -79,7 +79,7 @@ func (b *BoltDB) ID(avatarID string) (id string) {
 	data := []byte{}
 	err := b.db.View(func(tx *bolt.Tx) error {
 		if data = tx.Bucket([]byte(metasBktName)).Get([]byte(avatarID)); data == nil {
-			return errors.Errorf("can't load avatar's id for %s", avatarID)
+			return fmt.Errorf("can't load avatar's id for %s", avatarID)
 		}
 		return nil
 	})
@@ -116,7 +116,7 @@ func (b *BoltDB) List() (ids []string, err error) {
 			return nil
 		})
 	})
-	return ids, errors.Wrap(err, "failed to list")
+	return ids, fmt.Errorf("failed to list: %w", err)
 }
 
 // Close bolt store

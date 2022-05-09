@@ -7,14 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-pkgz/rest"
-	"github.com/pkg/errors"
-
 	"github.com/efureev/sauth/avatar"
 	"github.com/efureev/sauth/logger"
 	"github.com/efureev/sauth/middleware"
 	"github.com/efureev/sauth/provider"
 	"github.com/efureev/sauth/token"
+	"github.com/go-pkgz/rest"
 )
 
 // Client is a type of auth client
@@ -127,7 +125,7 @@ func NewService(opts Opts) (res *Service) {
 
 	if opts.SecretReader == nil {
 		jwtService.SecretReader = token.SecretFunc(func(string) (string, error) {
-			return "", errors.New("secrets reader not available")
+			return "", fmt.Errorf("secrets reader not available")
 		})
 		res.logger.Logf("[WARN] no secret reader defined")
 	}
@@ -305,7 +303,7 @@ func (s *Service) AddAppleProvider(appleConfig provider.AppleConfig, privKeyLoad
 	// Error checking at create need for catch one when apple private key init
 	appleProvider, err := provider.NewApple(p, appleConfig, privKeyLoader)
 	if err != nil {
-		return errors.Wrap(err, "an AppleProvider creating failed")
+		return fmt.Errorf("an AppleProvider creating failed: %w", err)
 	}
 
 	s.providers = append(s.providers, provider.NewService(appleProvider))
@@ -386,7 +384,7 @@ func (s *Service) AddCustomHandler(handler provider.Provider) {
 func (s *Service) DevAuth() (*provider.DevAuthServer, error) {
 	p, err := s.Provider("dev") // peak dev provider
 	if err != nil {
-		return nil, errors.Wrap(err, "dev provider not registered")
+		return nil, fmt.Errorf("dev provider not registered: %w", err)
 	}
 	// make and start dev auth server
 	return &provider.DevAuthServer{Provider: p.Provider.(provider.Oauth2Handler), L: s.logger}, nil
@@ -399,7 +397,7 @@ func (s *Service) Provider(name string) (provider.Service, error) {
 			return p, nil
 		}
 	}
-	return provider.Service{}, errors.Errorf("provider %s not found", name)
+	return provider.Service{}, fmt.Errorf("provider %s not found", name)
 }
 
 // Providers gets all registered providers
