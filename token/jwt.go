@@ -41,7 +41,7 @@ const (
 	defaultXSRFCookieName  = "XSRF-TOKEN"
 	defaultXSRFHeaderKey   = "X-XSRF-TOKEN"
 
-	defaultIssuer = "go-pkgz/auth"
+	defaultIssuer = "efureev/sauth"
 
 	defaultTokenDuration  = time.Minute * 15
 	defaultCookieDuration = time.Hour * 24 * 31
