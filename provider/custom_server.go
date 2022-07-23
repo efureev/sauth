@@ -3,12 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 
 	"github.com/efureev/sauth/avatar"
