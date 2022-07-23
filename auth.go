@@ -21,6 +21,7 @@ type Client struct {
 	Csecret string
 }
 
+// ProviderConfig ...
 type ProviderConfig struct {
 	Client
 	Enabled bool
@@ -233,6 +234,7 @@ func (s *Service) AddProvider(pConf ProviderConfig) {
 	s.AddProviderWithParams(pConf, s.DefaultParams(pConf))
 }
 
+// DefaultParams get Default Params for adding a providers wo config
 func (s *Service) DefaultParams(pConf ProviderConfig) provider.Params {
 	return provider.Params{
 		URL:         s.opts.URL,
@@ -245,6 +247,7 @@ func (s *Service) DefaultParams(pConf ProviderConfig) provider.Params {
 	}
 }
 
+// AddProviderWithParams adds a provider with its config
 func (s *Service) AddProviderWithParams(pConf ProviderConfig, p provider.Params) {
 
 	if !pConf.Enabled {
@@ -415,6 +418,7 @@ func (s *Service) AvatarProxy() *avatar.Proxy {
 	return s.avatarProxy
 }
 
+// NewProviderConfig creates ProviderConfig
 func NewProviderConfig(name, sid, secret string, enabled bool) ProviderConfig {
 	c := ProviderConfig{
 		Name:    name,
