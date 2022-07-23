@@ -21,7 +21,7 @@ type Client struct {
 	Csecret string
 }
 
-// ProviderConfig ...
+// ProviderConfig a provider's config
 type ProviderConfig struct {
 	Client
 	Enabled bool
@@ -229,7 +229,6 @@ func (s *Service) Middleware() middleware.Authenticator {
 }
 
 // AddProvider adds provider for given name
-//func (s *Service) AddProvider(name, cid, csecret string) {
 func (s *Service) AddProvider(pConf ProviderConfig) {
 	s.AddProviderWithParams(pConf, s.DefaultParams(pConf))
 }
