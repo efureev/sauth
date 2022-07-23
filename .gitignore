@@ -13,5 +13,6 @@
 .vscode
 *.cov
 Dockerfile
+profile.cov_tmp
 
 .idea
