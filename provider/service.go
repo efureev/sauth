@@ -89,7 +89,7 @@ func randToken() (string, error) {
 	}
 	s := sha1.New()
 	if _, err := s.Write(b); err != nil {
-		return "", fmt.Errorf("can't write randoms to sha1: %", err)
+		return "", fmt.Errorf("can't write randoms to sha1: %s", err)
 	}
 	return fmt.Sprintf("%x", s.Sum(nil)), nil
 }

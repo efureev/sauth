@@ -32,7 +32,7 @@ func (ud *UserData) SetRaw(key string, val interface{}) {
 
 func (ud *UserData) CreateCollection(name string) *Collection {
 	if ud.Collections == nil {
-		ud.Collections = map[string]*Collection{}
+		ud.Collections = NewCollections()
 	}
 
 	if _, ok := ud.Collections[name]; !ok {
@@ -61,6 +61,10 @@ func (ud *UserData) GetCollection(name string) *Collection {
 		return v
 	}
 	return nil
+}
+
+func NewCollections() Collections {
+	return map[string]*Collection{}
 }
 
 func NewCollection(name string) *Collection {

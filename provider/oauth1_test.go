@@ -196,7 +196,8 @@ func prepOauth1Test(t *testing.T, loginPort, authPort int) func() { // nolint
 			},
 		},
 		infoURL: fmt.Sprintf("http://localhost:%d/user", authPort),
-		mapUser: func(data UserData, _ []byte) token.User {
+
+		mapUser: func(data UserRawData, _ []byte) token.User {
 			userInfo := token.User{
 				ID:      "mock_" + data.Value("id"),
 				Name:    data.Value("name"),

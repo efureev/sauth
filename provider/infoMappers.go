@@ -51,12 +51,13 @@ func (mm *Oauth2Mappers) get() error {
 }
 
 type Oauth2Mapper struct {
-	infoURL string
-	mapFn   func(context.Context, *token.UserData, interface{}, []byte) token.User
-	result  interface{}
+	infoURL   string
+	mapFn     func(context.Context, *token.UserData, interface{}, []byte) token.User
+	result    interface{}
+	hasResult bool
 }
 
-func (m Oauth2Mapper) get(ctx context.Context, client *http.Client, l func(format string, args ...interface{})) (context.Context, error) {
+func (m *Oauth2Mapper) handleRequest(client *http.Client, l func(format string, args ...interface{})) ([]byte, error) {
 	info, err := client.Get(m.infoURL)
 	if err != nil {
 		return nil, CodeError{http.StatusServiceUnavailable, "failed to get client info", err}
@@ -77,25 +78,45 @@ func (m Oauth2Mapper) get(ctx context.Context, client *http.Client, l func(forma
 		return nil, CodeError{http.StatusInternalServerError, "failed to unmarshal user info", err}
 	}
 
+	m.hasResult = true
+
 	l("[DEBUG] got raw info from [%s]  %+v", m.infoURL, m.result)
 
+	return data, nil
+}
+
+func (m Oauth2Mapper) get(ctx context.Context, client *http.Client, l func(format string, args ...interface{})) (context.Context, error) {
+	var responseBytes []byte = nil
+	if !m.hasResult {
+		var err error
+		responseBytes, err = m.handleRequest(client, l)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return applyMapperToRawUserData(ctx, m, responseBytes), nil
+}
+
+func applyMapperToRawUserData(ctx context.Context, m Oauth2Mapper, responseBytes []byte) context.Context {
 	ud, err := token.GetUserDataFromCtx(ctx)
 	ud.SetRaw(m.infoURL, m.result)
 	if err != nil {
 		ctx = token.SetUserDataToCtx(ctx, ud)
 	}
 
-	user := m.mapFn(ctx, &ud, m.result, data)
+	user := m.mapFn(ctx, &ud, m.result, responseBytes)
 	ud.User = user
 	ud.CreateEmailCollection().Add(ud.User.Email, true)
 
-	return token.SetUserDataToCtx(ctx, ud), nil
+	return token.SetUserDataToCtx(ctx, ud)
 }
 
 func NewOauth2Mapper(url string, fn func(context.Context, *token.UserData, interface{}, []byte) token.User, t interface{}) Oauth2Mapper {
 	return Oauth2Mapper{
-		infoURL: url,
-		mapFn:   fn,
-		result:  t,
+		infoURL:   url,
+		mapFn:     fn,
+		result:    t,
+		hasResult: false,
 	}
 }

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,6 +35,7 @@ func TestOauth2Login(t *testing.T) {
 
 	// check non-admin, permanent
 	resp, err := client.Get("http://localhost:8981/login?site=remark")
+
 	require.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 	body, err := io.ReadAll(resp.Body)
@@ -51,6 +53,7 @@ func TestOauth2Login(t *testing.T) {
 	u := token.User{}
 	err = json.Unmarshal(body, &u)
 	assert.Nil(t, err)
+
 	assert.Equal(t, token.User{Name: "blah", ID: "mock_myuser1", Picture: "http://example.com/custom.png", IP: ""}, u)
 
 	tk := resp.Cookies()[0].Value
@@ -68,6 +71,7 @@ func TestOauth2Login(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 	body, err = io.ReadAll(resp.Body)
+
 	assert.Nil(t, err)
 	u = token.User{}
 	err = json.Unmarshal(body, &u)
@@ -225,15 +229,26 @@ func prepOauth2Test(t *testing.T, loginPort, authPort int) func() {
 			AuthURL:  fmt.Sprintf("http://localhost:%d/login/oauth/authorize", authPort),
 			TokenURL: fmt.Sprintf("http://localhost:%d/login/oauth/access_token", authPort),
 		},
-		scopes:  []string{"user:email"},
-		infoURL: fmt.Sprintf("http://localhost:%d/user", authPort),
-		mapUser: func(data UserData, _ []byte) token.User {
-			userInfo := token.User{
-				ID:      "mock_" + data.Value("id"),
-				Name:    data.Value("name"),
-				Picture: data.Value("picture"),
-			}
-			return userInfo
+		scopes: []string{"user:email"},
+		infoUrlMappers: []Oauth2Mapper{
+			NewOauth2Mapper(
+				fmt.Sprintf("http://localhost:%d/user", authPort),
+				func(ctx context.Context, ud *token.UserData, raw interface{}, b []byte) token.User {
+					d, ok := raw.(map[string]interface{})
+					if !ok {
+						panic(`not UserData`)
+					}
+					userRawData := UserRawData(d)
+					userInfo := token.User{
+						ID:      "mock_" + userRawData.Value("id"),
+						Name:    userRawData.Value("name"),
+						Picture: userRawData.Value("picture"),
+					}
+
+					return userInfo
+				},
+				UserRawData{},
+			),
 		},
 	}
 

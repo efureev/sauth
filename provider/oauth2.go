@@ -11,7 +11,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
 
-	"github.com/efureev/sauth/avatar"
 	"github.com/efureev/sauth/logger"
 	"github.com/efureev/sauth/token"
 )
@@ -44,7 +43,7 @@ type Params struct {
 	Port int // relevant for providers supporting port customization, for example dev oauth2
 }
 
-// UserData is type for user information returned from oauth2 providers /info API method
+// UserRawData is type for user information returned from oauth2 providers /info API method
 type UserRawData map[string]interface{}
 
 // Value returns value for key or empty string if not found
@@ -154,6 +153,7 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	p.conf.RedirectURL = p.makeRedirURL(r.URL.Path)
 
 	p.Logf("[DEBUG] token with state %s", retrievedState)
+
 	tok, err := p.conf.Exchange(context.Background(), r.URL.Query().Get("code"))
 	if err != nil {
 		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "exchange failed")
@@ -163,6 +163,7 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	client := p.conf.Client(context.Background(), tok)
 
 	mapper := newMappers(client, p.Logf)
+
 	err = mapper.adds(p.infoUrlMappers...).get()
 	if err != nil {
 		if e, ok := err.(CodeError); ok {
@@ -173,27 +174,32 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uData, err := token.GetUserDataFromCtx(mapper.ctx)
+	uData, err := getUserDataFromCtx(p, mapper.ctx)
 	if err != nil {
 		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "context is empty")
 		return
 	}
-	uData.Social = p.Name()
 
 	if oauthClaims.NoAva {
 		uData.User.Picture = "" // reset picture on no avatar request
 	}
 
-	if p.AvatarSaver.(*avatar.Proxy) != nil {
+	uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
+	if err != nil {
+		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
+		return
+	}
+
+	/*if p.AvatarSaver.(*avatar.Proxy) != nil {
 		uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
 		if err != nil {
 			rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
 			return
 		}
-	}
+	}*/
 
 	if p.AfterReceive != nil {
-		if err := p.AfterReceive(&uData); err != nil {
+		if err := p.AfterReceive(uData); err != nil {
 			if e, ok := err.(CodeError); ok {
 				rest.SendErrorJSON(w, r, p.L, e.code, e.err, e.message)
 				return
@@ -232,6 +238,16 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rest.RenderJSON(w, &uData.User)
+}
+
+func getUserDataFromCtx(p Oauth2Handler, ctx context.Context) (*token.UserData, error) {
+	uData, err := token.GetUserDataFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	uData.Social = p.Name()
+
+	return &uData, nil
 }
 
 // LogoutHandler - GET /logout

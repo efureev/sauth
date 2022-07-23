@@ -231,7 +231,7 @@ func TestIntegrationList(t *testing.T) {
 	_, teardown := prepService(t)
 	defer teardown()
 
-	resp, err := http.Get("http://127.0.0.1:8089/auth/list")
+	resp, err := http.Get("http://127.0.0.1:8089/auth/providers")
 	require.NoError(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, 200, resp.StatusCode)
@@ -469,7 +469,7 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	b, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	assert.Equal(t, "{\"status\":\"not logged in\"}\n", string(b))
+	assert.Equal(t, "{\"logged\":false,\"status\":\"not logged in\"}\n", string(b))
 
 	// login
 	jar, err := cookiejar.New(nil)
@@ -485,7 +485,7 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	b, err = io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	assert.Equal(t, "{\"status\":\"logged in\",\"user\":\"dev_user\"}\n", string(b))
+	assert.Equal(t, "{\"logged\":true,\"status\":\"logged in\",\"user\":{\"name\":\"dev_user\",\"id\":\"dev_user\",\"picture\":\"http://127.0.0.1:8089/api/v1/avatar/ccfa2abd01667605b4e1fc4fcb91b1e1af323240.image\",\"aud\":\"my-test-site\"}}\n", string(b))
 
 }
 

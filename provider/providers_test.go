@@ -1,29 +1,58 @@
 package provider
 
 import (
+	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/efureev/sauth/token"
+	"github.com/stretchr/testify/assert"
 )
+
+func handleMapper(r Oauth2Handler, serviceRawResponse map[string]interface{}) (*token.UserData, error) {
+	m := r.infoUrlMappers[0]
+	m.result = serviceRawResponse
+	m.hasResult = true
+
+	ctx := applyMapperToRawUserData(context.Background(), m, nil)
+	return getUserDataFromCtx(r, ctx)
+}
 
 func TestProviders_NewGoogle(t *testing.T) {
 	r := NewGoogle(Params{URL: "http://demo.remark42.com", Cid: "cid", Csecret: "cs"})
 	assert.Equal(t, "google", r.Name())
+	serviceRawResponse := map[string]interface{}{
+		"sub":     "1234567890",
+		"name":    "test user",
+		"email":   "test@google.com",
+		"picture": "http://demo.remark42.com/blah.png",
+	}
 
-	udata := UserData{"sub": "1234567890", "name": "test user", "picture": "http://demo.remark42.com/blah.png"}
-	user := r.mapUser(udata, nil)
-	assert.Equal(t, token.User{Name: "test user", ID: "google_01b307acba4f54f55aafc33bb06bbbf6ca803e9a",
-		Picture: "http://demo.remark42.com/blah.png", IP: ""}, user, "got %+v", user)
+	uData, err := handleMapper(r, serviceRawResponse)
 
-	// no name in data
-	udata = UserData{"sub": "1234567890", "picture": "http://demo.remark42.com/blah.png"}
-	user = r.mapUser(udata, nil)
-	assert.Equal(t, token.User{Name: "noname_1b30", ID: "google_01b307acba4f54f55aafc33bb06bbbf6ca803e9a",
-		Picture: "http://demo.remark42.com/blah.png", IP: ""}, user, "got %+v", user)
+	assert.Nil(t, err)
+	assert.Equal(t, &token.UserData{
+		User: token.User{
+			Name: "test user", ID: "1234567890", Picture: "http://demo.remark42.com/blah.png", IP: "", Audience: "",
+			Email:      "test@google.com",
+			Attributes: nil,
+			Role:       "",
+		},
+		Social: `google`,
+		Collections: token.Collections{
+			`emails`: {
+				Type: `emails`,
+				Items: map[string]interface{}{
+					"test@google.com": true,
+				},
+			},
+		},
+		Raw: map[string]interface{}{
+			"https://www.googleapis.com/oauth2/v3/userinfo": serviceRawResponse,
+		},
+	}, uData, "got %+v", uData)
 }
 
+/*
 func TestProviders_NewGithub(t *testing.T) {
 	r := NewGithub(Params{URL: "http://demo.remark42.com", Cid: "cid", Csecret: "cs"})
 	assert.Equal(t, "github", r.Name())
@@ -163,3 +192,4 @@ func TestProviders_NewPatreon(t *testing.T) {
 		user,
 	)
 }
+*/
