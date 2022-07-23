@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -184,19 +185,13 @@ func (p Oauth2Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		uData.User.Picture = "" // reset picture on no avatar request
 	}
 
-	uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
-	if err != nil {
-		rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
-		return
-	}
-
-	/*if p.AvatarSaver.(*avatar.Proxy) != nil {
+	if !(p.AvatarSaver == nil || reflect.ValueOf(p.AvatarSaver).IsNil()) {
 		uData.User, err = setAvatar(p.AvatarSaver, uData.User, client)
 		if err != nil {
 			rest.SendErrorJSON(w, r, p.L, http.StatusInternalServerError, err, "failed to save avatar to proxy")
 			return
 		}
-	}*/
+	}
 
 	if p.AfterReceive != nil {
 		if err := p.AfterReceive(uData); err != nil {
