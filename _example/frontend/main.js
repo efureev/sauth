@@ -30,7 +30,7 @@ function req(endpoint, data = {}) {
 }
 
 function getProviders() {
-  return req("/auth/list");
+  return req("/auth/providers");
 }
 
 function getUser() {

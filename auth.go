@@ -1,4 +1,4 @@
-// Package auth provides "social login" with Github, Google, Facebook, Microsoft, Yandex and Battle.net as well as custom auth providers.
+// Package sauth provides "social login" with Github, Google, Facebook, Microsoft, Yandex and Battle.net as well as custom auth providers.
 package sauth
 
 import (
@@ -161,8 +161,8 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		}
 
 		// list all providers
-		if elems[len(elems)-1] == "list" {
-			list := []string{}
+		if elems[len(elems)-1] == "providers" {
+			var list []string
 			for _, p := range s.providers {
 				list = append(list, p.Name())
 			}
@@ -201,10 +201,10 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		if elems[len(elems)-1] == "status" {
 			claims, _, err := s.jwtService.Get(r)
 			if err != nil || claims.User == nil {
-				rest.RenderJSON(w, rest.JSON{"status": "not logged in"})
+				rest.RenderJSON(w, rest.JSON{"status": "not logged in", "logged": false})
 				return
 			}
-			rest.RenderJSON(w, rest.JSON{"status": "logged in", "user": claims.User.Name})
+			rest.RenderJSON(w, rest.JSON{"status": "logged in", "logged": true, "user": claims.User})
 			return
 		}
 
