@@ -41,7 +41,7 @@ jobs:
           TZ: "America/Chicago"
           ENABLE_MONGO_TESTS: "true"
 
-  build:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
