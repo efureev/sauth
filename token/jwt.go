@@ -318,18 +318,6 @@ func (j *Service) Get(r *http.Request) (Claims, string, error) {
 	return claims, tokenString, err
 }
 
-/*func (j *Service) refreshExpiredToken(claims Claims) bool {
-
-	claims.ExpiresAt = 0                  // this will cause now+duration for refreshed token
-	tokenString, err := j.Set(w, claims)
-	c, err := a.JWTService.Set(w, claims) // Set changes token
-	if err != nil {
-		return token.Claims{}, err
-	}
-
-	a.Logf("[DEBUG] token refreshed for %+v", claims.User)
-}*/
-
 // IsExpired returns true if claims expired
 func (j *Service) IsExpired(claims Claims) bool {
 	return !claims.VerifyExpiresAt(time.Now().Unix(), true)
