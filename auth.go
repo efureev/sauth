@@ -77,6 +77,8 @@ type Opts struct {
 	AudSecrets       bool                     // allow multiple secrets (secret per aud)
 	Logger           logger.L                 // logger interface, default is no logging at all
 	RefreshCache     middleware.RefreshCache  // optional cache to keep refreshed tokens
+
+	RefreshTokenOnStatus bool // refresh jwt-token on `/status` request from browser (with sessions)
 }
 
 // NewService initializes everything
@@ -201,11 +203,22 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		// status of logged-in user
 		if elems[len(elems)-1] == "status" {
 			claims, _, err := s.jwtService.Get(r)
-			if err != nil || claims.User == nil {
+			if err != nil && err != token.NeedToRegenerateTokenError || claims.User == nil {
 				rest.RenderJSON(w, rest.JSON{"status": "not logged in", "logged": false, "message": err.Error()})
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			if s.opts.RefreshTokenOnStatus && err == token.NeedToRegenerateTokenError {
+				claims, err = s.refreshExpiredToken(w, claims)
+				if err != nil {
+					s.jwtService.Reset(w)
+					rest.RenderJSON(w, rest.JSON{"status": "not logged in", "logged": false, "message": `Server error`})
+					w.Header().Set(`X-Token-Regen`, `true`)
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+			}
+
 			rest.RenderJSON(w, rest.JSON{"status": "logged in", "logged": true, "user": claims.User})
 			return
 		}
@@ -222,6 +235,19 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 	}
 
 	return http.HandlerFunc(ah), http.HandlerFunc(s.avatarProxy.Handler)
+}
+
+func (s *Service) refreshExpiredToken(w http.ResponseWriter, claims token.Claims) (token.Claims, error) {
+
+	claims.ExpiresAt = 0 // this will cause now+duration for refreshed token
+	c, err := s.jwtService.Set(w, claims)
+	if err != nil {
+		return token.Claims{}, err
+	}
+
+	s.logger.Logf("[DEBUG] token refreshed for %+v", claims.User)
+
+	return c, nil
 }
 
 // Middleware returns auth middleware

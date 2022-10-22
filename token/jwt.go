@@ -49,6 +49,8 @@ const (
 	defaultTokenQuery = "token"
 )
 
+var NeedToRegenerateTokenError = fmt.Errorf(`need to regenerate token`)
+
 // Opts holds constructor params
 type Opts struct {
 	SecretReader   Secret
@@ -294,7 +296,11 @@ func (j *Service) Get(r *http.Request) (Claims, string, error) {
 	}
 
 	if j.DisableXSRF {
-		return claims, tokenString, nil
+		var err error
+		if j.IsExpired(claims) {
+			err = NeedToRegenerateTokenError
+		}
+		return claims, tokenString, err
 	}
 
 	if fromCookie && claims.User != nil {
@@ -304,8 +310,25 @@ func (j *Service) Get(r *http.Request) (Claims, string, error) {
 		}
 	}
 
-	return claims, tokenString, nil
+	err = nil
+	if j.IsExpired(claims) {
+		err = NeedToRegenerateTokenError
+	}
+
+	return claims, tokenString, err
 }
+
+/*func (j *Service) refreshExpiredToken(claims Claims) bool {
+
+	claims.ExpiresAt = 0                  // this will cause now+duration for refreshed token
+	tokenString, err := j.Set(w, claims)
+	c, err := a.JWTService.Set(w, claims) // Set changes token
+	if err != nil {
+		return token.Claims{}, err
+	}
+
+	a.Logf("[DEBUG] token refreshed for %+v", claims.User)
+}*/
 
 // IsExpired returns true if claims expired
 func (j *Service) IsExpired(claims Claims) bool {
