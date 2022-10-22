@@ -96,7 +96,7 @@ func NewService(opts Opts) (res *Service) {
 	}
 
 	if opts.Issuer == "" {
-		res.issuer = "go-pkgz/auth"
+		res.issuer = "efureev/auth"
 	}
 
 	if opts.Logger == nil {
@@ -202,7 +202,8 @@ func (s *Service) Handlers() (authHandler, avatarHandler http.Handler) {
 		if elems[len(elems)-1] == "status" {
 			claims, _, err := s.jwtService.Get(r)
 			if err != nil || claims.User == nil {
-				rest.RenderJSON(w, rest.JSON{"status": "not logged in", "logged": false})
+				rest.RenderJSON(w, rest.JSON{"status": "not logged in", "logged": false, "message": err.Error()})
+				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 			rest.RenderJSON(w, rest.JSON{"status": "logged in", "logged": true, "user": claims.User})
