@@ -11,6 +11,7 @@ import (
 	"github.com/efureev/sauth/logger"
 	"github.com/efureev/sauth/middleware"
 	"github.com/efureev/sauth/provider"
+	"github.com/efureev/sauth/redirect"
 	"github.com/efureev/sauth/token"
 	"github.com/go-pkgz/rest"
 )
@@ -79,6 +80,8 @@ type Opts struct {
 	RefreshCache     middleware.RefreshCache  // optional cache to keep refreshed tokens
 
 	RefreshTokenOnStatus bool // refresh jwt-token on `/status` request from browser (with sessions)
+
+	RedirectBuilder redirect.RedirectBuilderFn
 }
 
 // NewService initializes everything
@@ -148,6 +151,10 @@ func NewService(opts Opts) (res *Service) {
 		if res.avatarProxy.RoutePath == "" {
 			res.avatarProxy.RoutePath = "/avatar"
 		}
+	}
+
+	if res.opts.RedirectBuilder == nil {
+		res.opts.RedirectBuilder = redirect.DefaultRedirect()
 	}
 
 	return res
@@ -263,13 +270,14 @@ func (s *Service) AddProvider(pConf ProviderConfig) {
 // DefaultParams get Default Params for adding a providers wo config
 func (s *Service) DefaultParams(pConf ProviderConfig) provider.Params {
 	return provider.Params{
-		URL:         s.opts.URL,
-		JwtService:  s.jwtService,
-		Issuer:      s.issuer,
-		AvatarSaver: s.avatarProxy,
-		Cid:         pConf.Cid,
-		Csecret:     pConf.Csecret,
-		L:           s.logger,
+		URL:             s.opts.URL,
+		RedirectBuilder: s.opts.RedirectBuilder,
+		JwtService:      s.jwtService,
+		Issuer:          s.issuer,
+		AvatarSaver:     s.avatarProxy,
+		Cid:             pConf.Cid,
+		Csecret:         pConf.Csecret,
+		L:               s.logger,
 	}
 }
 

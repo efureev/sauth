@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/efureev/sauth/redirect"
 	"github.com/go-pkgz/rest"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/oauth2"
@@ -33,13 +34,14 @@ type Oauth2Handler struct {
 // Params to make initialized and ready to use provider
 type Params struct {
 	logger.L
-	URL          string
-	JwtService   TokenService
-	Cid          string
-	Csecret      string
-	Issuer       string
-	AvatarSaver  AvatarSaver
-	AfterReceive func(u *token.UserData) error
+	URL             string
+	JwtService      TokenService
+	Cid             string
+	Csecret         string
+	Issuer          string
+	AvatarSaver     AvatarSaver
+	AfterReceive    func(u *token.UserData) error
+	RedirectBuilder redirect.RedirectBuilderFn
 
 	Port int // relevant for providers supporting port customization, for example dev oauth2
 }
@@ -126,9 +128,13 @@ func (p Oauth2Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// return login url
 	loginURL := p.conf.AuthCodeURL(state)
-	p.Logf("[DEBUG] login url %s, claims=%+v", loginURL, claims)
 
-	http.Redirect(w, r, loginURL, http.StatusFound)
+	p.Logf("[DEBUG] login url %s, claims=%+v", loginURL, claims)
+	p.performRedirect(w, r, loginURL)
+}
+
+func (p Oauth2Handler) performRedirect(w http.ResponseWriter, r *http.Request, loginURL string) {
+	(p.RedirectBuilder)(w, r, loginURL)
 }
 
 // AuthHandler fills user info and redirects to "from" url. This is callback url redirected locally by browser
